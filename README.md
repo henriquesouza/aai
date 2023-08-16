@@ -1,6 +1,6 @@
 # aai
 
-> Android&reg; (Dynamic Memory) Allocation Interceptor
+> Dynamic Memory Allocation Interceptor for Android&reg;
 
 ## Licensing
 
