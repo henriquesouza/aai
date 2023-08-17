@@ -107,7 +107,7 @@ void* calloc(size_t nmemb, size_t size)
 
     void* alloced = real_calloc(nmemb, size);
 
-    if (aaiLock && !aaiLockCalloc){
+    if (aaiLock && !aaiLockCalloc){ // TODO: hypothesis: make it so no allocations are logged while a log is being registered
         exitOnSeconds(3);
         enqueu(q, size*nmemb, 'c', alloced);
         aaiLockCalloc = !aaiLockCalloc;
