@@ -11,8 +11,10 @@
 
 static allocationsQueue* q = NULL;
 static void* (*real_malloc)(size_t) = NULL ;
-// static void (*real_free)(void*) = NULL ;
+static void* (*real_calloc)(size_t, size_t) = NULL ;
+static void (*real_free)(void*) = NULL ;
 static bool aaiLock = true;
+static bool aaiLockCalloc = true;
 static FILE* f = NULL;
 
 
@@ -38,8 +40,8 @@ void printQueue(allocationsQueue* q)
         aaiLock = false;
 
         // if (f == NULL) f = fopen("/data/local/tmp/file.csv", "w+");
-        // if (f == NULL) f = fopen("/tmp/file.csv", "w+");
-        if (f == NULL) f = fopen("/storage/emulated/0/Android/data/org.videolan.vlc/files/file.csv", "w+");
+        if (f == NULL) f = fopen("/tmp/file.csv", "w+");
+        // if (f == NULL) f = fopen("/storage/emulated/0/Android/data/org.videolan.vlc/files/file.csv", "w+");
         // printf(
         //     "%p %c = %d, at %d\n",
         //     next->address, next->type, next->size, next->time);
@@ -68,6 +70,7 @@ void enqueu(allocationsQueue* q, size_t size, char type, void* address)
     else q->first = new_item;
 
     q->last = new_item;
+    aaiLockCalloc = !aaiLockCalloc;
 }
 
 void exitOnSeconds(int s)
@@ -89,7 +92,7 @@ void* malloc(size_t size)
     if (q == NULL) q = (allocationsQueue*) real_malloc(
         sizeof(allocationsQueue));
 
-    else if (aaiLock) exitOnSeconds(5);
+    else if (aaiLock) exitOnSeconds(3);
 
     void* alloced = real_malloc(size);
 
@@ -98,14 +101,29 @@ void* malloc(size_t size)
     return alloced;
 }
 
-// void free(void* address)
-// {
-//     if (real_free == NULL) real_free = dlsym(RTLD_NEXT, "free");
-//
-//     if (aaiLock) exitOnSeconds(10);
-//
-//     if (aaiLock) enqueu(q, 0, 'f', address);
-//
-//     real_free(address);
-// }
+void* calloc(size_t nmemb, size_t size)
+{
+    if (real_calloc == NULL) real_calloc = dlsym(RTLD_NEXT, "calloc");
+
+    void* alloced = real_calloc(nmemb, size);
+
+    if (aaiLock && !aaiLockCalloc){
+        exitOnSeconds(3);
+        enqueu(q, size*nmemb, 'c', alloced);
+        aaiLockCalloc = !aaiLockCalloc;
+    }
+
+    return alloced;
+}
+
+void free(void* address)
+{
+    if (real_free == NULL) real_free = dlsym(RTLD_NEXT, "free");
+
+    if (aaiLock) exitOnSeconds(3);
+
+    if (aaiLock) enqueu(q, 0, 'f', address);
+
+    real_free(address);
+}
 

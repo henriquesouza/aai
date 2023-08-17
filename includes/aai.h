@@ -10,7 +10,7 @@ typedef struct allocationQueue_t {
 } allocationsQueue;
 
 void* malloc(size_t size);
-// void* calloc(int , size_t size);
+void* calloc(size_t nmemb, size_t size);
 // void* realloc(size_t size);
-// void* free(void* p);
+void free(void* p);
 
